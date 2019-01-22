@@ -1152,6 +1152,11 @@ static struct config_path_setting *populate_settings_path(settings_t *settings, 
    struct config_path_setting  *tmp    = (struct config_path_setting*)calloc(1, (*size + 1) * sizeof(struct config_path_setting));
 
    /* Paths */
+
+   SETTING_PATH("input_player1_path",                   settings->paths.input_player1_path, false, NULL, true);
+   SETTING_PATH("input_player2_path",                   settings->paths.input_player2_path, false, NULL, true);
+   SETTING_PATH("input_player3_path",                   settings->paths.input_player3_path, false, NULL, true);
+   SETTING_PATH("input_player4_path",                   settings->paths.input_player4_path, false, NULL, true);
 #ifdef HAVE_XMB
    SETTING_PATH("xmb_font",                   settings->paths.path_menu_xmb_font, false, NULL, true);
 #endif

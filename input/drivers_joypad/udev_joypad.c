@@ -21,6 +21,8 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include <stdio.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/poll.h>
@@ -36,6 +38,7 @@
 
 #include "../../tasks/tasks_internal.h"
 
+#include "../../configuration.h"
 #include "../../verbosity.h"
 
 /* Udev/evdev Linux joypad driver.
@@ -106,11 +109,19 @@ static INLINE int16_t udev_compute_axis(const struct input_absinfo *info, int va
    return axis;
 }
 
-static int udev_find_vacant_pad(void)
+static int udev_find_vacant_pad(int propose, int seek)
 {
    unsigned i;
 
-   for (i = 0; i < MAX_USERS; i++)
+   if(propose >= 0){
+     if (udev_pads[propose].fd < 0){
+       return propose;
+     } else {
+       return -1;
+     }
+   }
+
+   for (i = seek; i < MAX_USERS; i++)
       if (udev_pads[i].fd < 0)
          return i;
    return -1;
@@ -272,6 +283,7 @@ static void udev_check_device(struct udev_device *dev, const char *path)
    int pad, fd;
    unsigned i;
    struct stat st;
+   settings_t *settings = config_get_ptr();
 
    if (stat(path, &st) < 0)
       return;
@@ -287,7 +299,32 @@ static void udev_check_device(struct udev_device *dev, const char *path)
       }
    }
 
-   pad = udev_find_vacant_pad();
+   const char *udev_syspath;
+   int pad_seek = 0;
+   int pad_propose = -1;
+
+   udev_syspath = udev_device_get_syspath(dev);
+   RARCH_LOG("[udev] %s: syspath %s\n", __FUNCTION__, udev_syspath);
+
+   const char *player_path;
+
+#define CHECK_FIXED_JOYPAD(n) \
+   player_path = settings->paths.input_player ## n ##_path; \
+   if (strlen(player_path) != 0){ \
+     pad_seek++; \
+     RARCH_LOG("[udev] %s: player"  #n "_path set %s\n", __FUNCTION__,player_path); \
+     if (strstr(udev_syspath, player_path) != NULL) { \
+       pad_propose = n - 1; \
+       RARCH_LOG("[udev] %s: player" #n "_path propose=%i\n", __FUNCTION__, pad_propose); \
+     } \
+   }
+
+   CHECK_FIXED_JOYPAD(1);
+   CHECK_FIXED_JOYPAD(2);
+   CHECK_FIXED_JOYPAD(3);
+   CHECK_FIXED_JOYPAD(4);
+
+   pad = udev_find_vacant_pad(pad_propose, pad_seek);
    if (pad < 0)
       return;
 

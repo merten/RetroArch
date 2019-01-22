@@ -563,6 +563,11 @@ typedef struct settings
       char directory_menu_config[PATH_MAX_LENGTH];
       char directory_menu_content[PATH_MAX_LENGTH];
       char streaming_title[PATH_MAX_LENGTH];
+
+      char input_player1_path[PATH_MAX_LENGTH];
+      char input_player2_path[PATH_MAX_LENGTH];
+      char input_player3_path[PATH_MAX_LENGTH];
+      char input_player4_path[PATH_MAX_LENGTH];
    } paths;
 
    bool modified;
